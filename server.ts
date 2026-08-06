@@ -611,7 +611,7 @@ async function syncStore(storeId: string): Promise<StoreData | undefined> {
   // Define default values for master-ceo
   const getDefaultMaster = (): StoreData => ({
     id: 'master-ceo',
-    email: 'kickboxing086@gmail.com',
+    email: 'samuellsilvva02@gmail.com',
     password: '86113980',
     settings: {
       storeName: 'CEO MASTER PANEL',
@@ -1476,7 +1476,7 @@ app.post('/api/login', async (req, res) => {
   const identity = (email || username || '').toLowerCase().trim();
   
   // Super Admin Check (both user mail and default main store owner)
-  const isSuperIdentity = identity === 'kickboxing086@gmail.com' || identity === 'samuellsilvva02@gmail.com' || identity === 'admin@cardapp.com' || identity === 'samuelsilva';
+  const isSuperIdentity = identity === 'samuellsilvva02@gmail.com' || identity === 'kickboxing086@gmail.com' || identity === 'admin@cardapp.com' || identity === 'samuelsilva';
   
   // Sync matching stores to populate local cache safely
   try {
@@ -1704,7 +1704,7 @@ const adminAuth = async (req: any, res: any, next: any) => {
     if (!stores.has(storeId)) {
       stores.set(storeId, {
         id: storeId,
-        email: 'kickboxing086@gmail.com',
+        email: 'samuellsilvva02@gmail.com',
         password: '86113980',
         settings: {
           storeName: 'CEO MASTER PANEL',
@@ -2473,8 +2473,8 @@ app.put('/api/super/stores/:id', superAuth, async (req: any, res: any) => {
     if (storeId === 'master-ceo' || storeId === 'barraca-do-samuel') {
       store = {
         id: storeId,
-        email: 'kickboxing086@gmail.com',
-        password: 'admin',
+        email: 'samuellsilvva02@gmail.com',
+        password: '86113980',
         settings: { storeName: 'Master CEO', primaryColor: '#f59e0b', logo: '' },
         products: [],
         orders: [],
