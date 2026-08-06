@@ -1,0 +1,43 @@
+[
+  [
+    "master-ceo",
+    {
+      "id": "master-ceo",
+      "email": "kickboxing086@gmail.com",
+      "password": "86113980",
+      "settings": {
+        "storeName": "Cardapp CEO Teste",
+        "primaryColor": "#22c55e",
+        "storeSlug": "master",
+        "storeTagline": "Controle Global do Ecossistema Cardapp",
+        "whatsappNumber": "5584986113980",
+        "businessType": "outros"
+      },
+      "products": [],
+      "orders": [],
+      "createdAt": "2026-08-03T00:49:03.012Z",
+      "updatedAtLocal": 1785718143121,
+      "lastSavedToFirestore": 1785718143121
+    }
+  ],
+  [
+    "barraca-do-samuel",
+    {
+      "id": "barraca-do-samuel",
+      "email": "elitestreambr1@gmail.com",
+      "password": "86113980",
+      "settings": {
+        "storeName": "Barraca do Samuel",
+        "logo": "/logo.png",
+        "primaryColor": "#fbbf24",
+        "whatsappNumber": "5584986113980",
+        "storeSlug": "barraca-do-samuel"
+      },
+      "products": [],
+      "orders": [],
+      "updatedAtLocal": 1785717376613,
+      "lastSavedToFirestore": 1785717376613,
+      "lastSyncedFromFirestore": 1785721751052
+    }
+  ]
+]

@@ -1,0 +1,46 @@
+  if (!newSlug) {
+    newSlug = (storeName || 'nova-loja')
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+    
+  // Ensure slug uniqueness
+  const isTaken = await isStoreSlugTaken(newSlug, '');
+  const newId = isTaken ? `${newSlug}-${Math.random().toString(36).substring(2, 6)}` : newSlug;
+  
+  const storeNameFirst = storeName.trim();
+  
+  const newStore: StoreData = {
+    id: newId,
+    email: email ? email.toLowerCase().trim() : '',
+    username: username ? username.toLowerCase().trim() : '',
+    password,
+    settings: {
+      storeName,
+      logo: '/logo.png',
+      storeNameFirst,
+      storeNameFirstColor: '#1e293b',
+      primaryColor: '#22c55e',
+      whatsappNumber: '',
+      storeSlug: newId,
+      businessType: 'outros',
+      categories: ['Geral'],
+      locationAddress: '',
+      isOpen: true,
+      fontFamily: 'inter',
+      planType: 'free',
+      planStartDate: new Date().toISOString()
+    },
+    products: [],
+    orders: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  stores.set(newId, newStore);
+  await saveStoreToFirestore(newId, newStore);
+  res.json({ success: true, storeId: newId });
+});
+

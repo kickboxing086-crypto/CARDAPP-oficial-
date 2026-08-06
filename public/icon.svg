@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Cloche Top Knob -->
+  <circle cx="12" cy="5" r="1.2" fill="#f59e0b" />
+  <!-- Cloche Dome -->
+  <path d="M4 14a8 8 0 0 1 16 0" />
+  <!-- Shine on Dome -->
+  <path d="M9 10a4 4 0 0 1 4-2" stroke-width="1.5" opacity="0.7" />
+  <!-- Tray Base Plate -->
+  <path d="M2 17h20" stroke-width="2.5" />
+  <!-- Tray Bottom Lip -->
+  <path d="M1 19.5h22" stroke-width="1.2" opacity="0.6" />
+</svg>
