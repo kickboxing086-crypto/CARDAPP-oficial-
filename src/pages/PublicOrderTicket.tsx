@@ -241,7 +241,7 @@ export default function PublicOrderTicket() {
                     <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest mb-1">Forma de Pagamento</p>
                     <p className="text-xs font-black text-gray-800 uppercase italic">
                       {order.paymentMethod === 'pix' ? '💠 PIX' : 
-                       order.paymentMethod === 'card_online' ? '💳 Cartão Online' :
+                       (order.paymentMethod as string) === 'card_online' ? '💳 Cartão Online' :
                        order.paymentMethod === 'card' ? '💳 Cartão na Entrega' : '💵 Dinheiro'}
                     </p>
                   </div>

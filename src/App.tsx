@@ -20,16 +20,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans">
       <Routes>
-        {/* If on a subdomain, render CustomerView at root / and order ticket at /order/:orderId/ticket */}
-        {subdomainStoreId ? (
-          <>
-            <Route path="/" element={<CustomerView overrideStoreId={subdomainStoreId} />} />
-            <Route path="/order/:orderId/ticket" element={<PublicOrderTicket />} />
-          </>
-        ) : (
-          <Route path="/" element={<LandingPage />} />
-        )}
-
+        <Route path="/" element={subdomainStoreId ? <CustomerView overrideStoreId={subdomainStoreId} /> : <LandingPage />} />
+        <Route path="/order/:orderId/ticket" element={<PublicOrderTicket />} />
         <Route path="/s/:storeId" element={<CustomerView />} />
         <Route path="/cardapp/:storeId" element={<CustomerView />} />
         <Route path="/digimenu/:storeId" element={<CustomerView />} />

@@ -1,9 +1,6 @@
-import { db, auth, googleProvider } from "../lib/firebase";
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc, collection, getDocs, addDoc } from "firebase/firestore";
 import React, { useEffect, useState, useMemo } from 'react';
 import { ShoppingCart, MapPin, Search, Plus, Minus, Check, X, Camera, CreditCard, QrCode, Banknote, Coins, Apple, Leaf, Carrot, Package, ShoppingBag, Trash2, Clock, BookOpen, ShieldAlert, Store, Landmark, RefreshCw, Loader2, LayoutGrid, List, ShieldCheck, Tag, AlertTriangle, ChevronRight, ChevronLeft, Star, MessageSquare, Instagram, Facebook, Globe, Lock, Calendar, Truck, Smartphone, Share, User as UserIcon, LogOut } from 'lucide-react';
-import { Product, StoreSettings, Order, ProductAddon } from '../types';
+import { Product, StoreSettings, Order, ProductAddon, PaymentMethod } from '../types';
 import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { getApiUrl } from '../lib/api';
@@ -16,6 +13,7 @@ interface CartItem {
   quantity: number;
   addons?: ProductAddon[];
   flavors?: string[];
+  productObservation?: string;
 }
 
 export default function CustomerView({ overrideStoreId }: { overrideStoreId?: string }) {
@@ -63,7 +61,7 @@ export default function CustomerView({ overrideStoreId }: { overrideStoreId?: st
   const [isIOS, setIsIOS] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [showPwaAssistant, setShowPwaAssistant] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -250,7 +248,7 @@ export default function CustomerView({ overrideStoreId }: { overrideStoreId?: st
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
   };
   const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'cash'>('pix');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [paymentMethodError, setPaymentMethodError] = useState(false);
   const [changeFor, setChangeFor] = useState<number | ''>('');
   const [observation, setObservation] = useState('');
@@ -3800,7 +3798,7 @@ export default function CustomerView({ overrideStoreId }: { overrideStoreId?: st
                                    <input 
                                      type="number"
                                      value={changeFor}
-                                     onChange={e => setChangeFor(e.target.value)}
+                                     onChange={e => setChangeFor(e.target.value === '' ? '' : Number(e.target.value))}
                                      placeholder="Ex: 50.00"
                                      className="w-full pl-11 pr-4 py-3 bg-white border border-emerald-200 rounded-xl focus:border-emerald-500 outline-none font-bold text-emerald-950 shadow-inner"
                                    />

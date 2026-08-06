@@ -73,6 +73,7 @@ export interface StoreSettings {
   storeType?: 'delivery_and_pickup' | 'only_delivery' | 'only_pickup';
   weeklySchedules?: DaySchedule[];
   planType?: 'free' | 'monthly' | 'quarterly';
+  plan?: string;
   planStartDate?: string;
   coverImage?: string; // Base64 representation of the cover image
   minimumOrderValue?: number; // Minimum order amount
@@ -140,6 +141,9 @@ export interface Order {
   stockReduced?: boolean;
   scheduledDate?: string;
   scheduledTime?: string;
+  customerAddress?: string;
+  neighborhood?: string;
+  notes?: string;
 }
 
 export interface Ambassador {

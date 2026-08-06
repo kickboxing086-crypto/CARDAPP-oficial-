@@ -1,5 +1,5 @@
 import dns from 'dns';
-if (!process.env.VERCEL) { dns.setDefaultResultOrder('ipv4first'); }
+dns.setDefaultResultOrder('ipv4first');
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -121,18 +121,15 @@ for (const configPath of configPaths) {
 
 
 // --- SUPABASE SETUP ---
-import nodeFetch from 'node-fetch';
-import { Agent } from 'https';
 
-const ipv4Agent = new Agent({ family: 4 }); // Force IPv4
-// Override fetch for the whole file
-const fetch = (url, options = {}) => {
-  if (process.env.VERCEL) {
-    return globalThis.fetch(url, options);
-  }
-  return nodeFetch(url, { ...options, agent: ipv4Agent });
+
+// Use native Node 18 fetch
+const customFetch = (url: string, options: any = {}) => {
+  return globalThis.fetch(url, {
+    ...options,
+    signal: options.signal || AbortSignal.timeout(4500)
+  });
 };
-const customFetch = fetch;
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
@@ -493,7 +490,8 @@ async function syncTransactionsFromFirestore() {
     }
   };
   try {
-    const res = await fetch(url, {
+    const res = await globalThis.fetch(url, {
+      signal: AbortSignal.timeout(4000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -718,7 +716,8 @@ async function queryStoreByEmail(email: string): Promise<StoreData | undefined> 
     };
 
     try {
-      const res = await fetch(url, {
+      const res = await globalThis.fetch(url, {
+      signal: AbortSignal.timeout(4000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -788,7 +787,8 @@ async function queryStoreByUsername(username: string): Promise<StoreData | undef
     };
 
     try {
-      const res = await fetch(url, {
+      const res = await globalThis.fetch(url, {
+      signal: AbortSignal.timeout(4000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -867,7 +867,8 @@ async function isStoreSlugTaken(slug: string, currentStoreId: string): Promise<b
   };
   
   try {
-    const res = await fetch(url, {
+    const res = await globalThis.fetch(url, {
+      signal: AbortSignal.timeout(4000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -922,7 +923,8 @@ async function saveStoreToFirestore(storeId: string, data: StoreData): Promise<b
     const cleanData = JSON.parse(JSON.stringify(data));
     const fields = toFirestoreFields(cleanData);
     
-    const res = await fetch(url, {
+    const res = await globalThis.fetch(url, {
+      signal: AbortSignal.timeout(4000),
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields })
@@ -980,7 +982,8 @@ async function syncStoreBySlugOrId(slugOrId: string): Promise<StoreData | undefi
       }
     };
     
-    const res = await fetch(url, {
+    const res = await globalThis.fetch(url, {
+      signal: AbortSignal.timeout(4000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -1208,12 +1211,12 @@ app.get('/api/stores/:slugOrId', async (req, res) => {
       id: store.id,
       success: true,
       settings: {
-        storeName: store.settings.storeName,
-        storeSlug: store.settings.storeSlug,
-        logo: store.settings.logo,
-        description: store.settings.description,
-        planType: store.settings.planType,
-        isOpen: store.settings.isOpen
+        storeName: store.settings?.storeName || store.id,
+        storeSlug: store.settings?.storeSlug || store.id,
+        logo: store.settings?.logo || '/logo.png',
+        description: store.settings?.description || '',
+        planType: store.settings?.planType || '7 Dias Grátis',
+        isOpen: store.settings?.isOpen !== false
       }
     });
   } catch (err) {
@@ -1232,7 +1235,7 @@ app.get('/api/stores/:slugOrId/settings', async (req, res) => {
 app.get('/api/stores/:slugOrId/logo', async (req, res) => {
   const param = req.params.slugOrId?.toLowerCase().trim();
   const store = await syncStoreBySlugOrId(param);
-  if (!store || !store.settings.logo) {
+  if (!store || !store.settings?.logo) {
     return res.redirect('/logo.png');
   }
 
@@ -1274,7 +1277,7 @@ app.get('/api/stores/:slugOrId/booked-slots', async (req, res) => {
 
   const manuallyBlocked = (store.settings?.manualBlockedSlots && store.settings.manualBlockedSlots[date]) || [];
   
-  const bookedSlotsByOrders = store.settings?.blockTakenSlots ? store.orders
+  const bookedSlotsByOrders = store.settings?.blockTakenSlots ? (store.orders || [])
     .filter(o => o.scheduledDate === date && o.scheduledTime && o.status !== 'completed' && o.status !== 'canceled')
     .map(o => o.scheduledTime as string) : [];
     
@@ -1448,10 +1451,22 @@ app.post('/api/login', async (req, res) => {
   // Super Admin Check (both user mail and default main store owner)
   const isSuperIdentity = identity === 'kickboxing086@gmail.com' || identity === 'samuellsilvva02@gmail.com' || identity === 'admin@cardapp.com' || identity === 'samuelsilva';
   
-  // Sync matching stores to populate local cache
-  await queryStoreByEmail(identity);
-  await queryStoreByUsername(identity);
-  await syncStoreBySlugOrId(identity);
+  // Sync matching stores to populate local cache safely
+  try {
+    await queryStoreByEmail(identity);
+  } catch (err) {
+    console.error('[API Login] queryStoreByEmail error:', err);
+  }
+  try {
+    await queryStoreByUsername(identity);
+  } catch (err) {
+    console.error('[API Login] queryStoreByUsername error:', err);
+  }
+  try {
+    await syncStoreBySlugOrId(identity);
+  } catch (err) {
+    console.error('[API Login] syncStoreBySlugOrId error:', err);
+  }
   console.log(`[API Login] Identity: "${identity}", stores in map: ${stores.size}`);
 
   // Find all matching stores by email/username/ID with correct password

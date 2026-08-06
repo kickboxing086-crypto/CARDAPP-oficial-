@@ -501,7 +501,7 @@ export default function AdminDashboard() {
         const text = await res.text();
         console.error('Non-JSON response:', text);
         if (text.includes('FUNCTION_INVOCATION_FAILED')) {
-            throw new Error('Erro 500: Falha no servidor Vercel (Timeout de Conexão). Tentando usar IPv4...');
+            throw new Error('Erro 500: Falha de conexão. Por favor, tente novamente.');
         }
         const snippet = text.slice(0, 200).replace(/<[^>]*>/g, ' ').trim();
         throw new Error(`Erro ${res.status}: ${snippet || 'Resposta inválida'}`);
@@ -1921,7 +1921,7 @@ export default function AdminDashboard() {
       flavors: editProduct.flavors?.filter(f => f.trim() !== '') || [],
       unavailableFlavors: editProduct.unavailableFlavors?.filter(f => f.trim() !== '') || [],
       addons: editProduct.addons?.filter(a => a.name.trim() !== '') || [],
-      stockCount: (editProduct.stockCount !== undefined && editProduct.stockCount !== null && editProduct.stockCount !== '' && !isNaN(Number(editProduct.stockCount))) ? Number(editProduct.stockCount) : undefined
+      stockCount: (editProduct.stockCount !== undefined && editProduct.stockCount !== null && (editProduct.stockCount as any) !== '' && !isNaN(Number(editProduct.stockCount))) ? Number(editProduct.stockCount) : undefined
     };
     
     try {
@@ -4546,7 +4546,7 @@ ${totalLine}`;
                       let expectedDeliveryTime: number | null = null;
                       let diffMinutes = 0;
 
-                      if (order.status === 'pending' || order.status === 'preparing' || order.status === 'delivery' || order.status === 'out_for_delivery' || order.status === 'pickup') {
+                      if (order.status === 'pending' || order.status === 'preparing' || order.status === 'delivery' || (order.status as string) === 'out_for_delivery' || order.status === 'pickup') {
                         let delayMinutes = 40; // Default
                         if (deliveryTime) {
                           const match = deliveryTime.match(/\d+/);

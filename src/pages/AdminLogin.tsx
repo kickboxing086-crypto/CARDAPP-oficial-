@@ -1,5 +1,3 @@
-import { db } from "../lib/firebase";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Store, ChevronRight, ArrowLeft, ShieldCheck, Globe, WifiOff, Eye, EyeOff } from 'lucide-react';
