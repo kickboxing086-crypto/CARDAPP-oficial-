@@ -1,5 +1,11 @@
 import dns from 'dns';
-dns.setDefaultResultOrder('ipv4first');
+try {
+  if (dns && typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+  }
+} catch (dnsErr) {
+  console.warn('[System] Could not set DNS default result order:', dnsErr);
+}
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -123,12 +129,33 @@ for (const configPath of configPaths) {
 // --- SUPABASE SETUP ---
 
 
-// Use native Node 18 fetch
+const getAbortSignalWithTimeout = (ms: number): any => {
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    try {
+      return AbortSignal.timeout(ms);
+    } catch (e) {}
+  }
+  try {
+    const controller = new AbortController();
+    setTimeout(() => {
+      try {
+        controller.abort();
+      } catch (e) {}
+    }, ms);
+    return controller.signal;
+  } catch (err) {
+    return null;
+  }
+};
+
+// Use native Node 18 fetch with safe timeout
 const customFetch = (url: string, options: any = {}) => {
-  return globalThis.fetch(url, {
-    ...options,
-    signal: options.signal || AbortSignal.timeout(4500)
-  });
+  const signal = options.signal || getAbortSignalWithTimeout(4500);
+  const fetchOpts: any = { ...options };
+  if (signal) {
+    fetchOpts.signal = signal;
+  }
+  return globalThis.fetch(url, fetchOpts);
 };
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -491,7 +518,7 @@ async function syncTransactionsFromFirestore() {
   };
   try {
     const res = await globalThis.fetch(url, {
-      signal: AbortSignal.timeout(4000),
+      signal: getAbortSignalWithTimeout(4000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -717,7 +744,7 @@ async function queryStoreByEmail(email: string): Promise<StoreData | undefined> 
 
     try {
       const res = await globalThis.fetch(url, {
-      signal: AbortSignal.timeout(4000),
+      signal: getAbortSignalWithTimeout(4000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -788,7 +815,7 @@ async function queryStoreByUsername(username: string): Promise<StoreData | undef
 
     try {
       const res = await globalThis.fetch(url, {
-      signal: AbortSignal.timeout(4000),
+      signal: getAbortSignalWithTimeout(4000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -868,7 +895,7 @@ async function isStoreSlugTaken(slug: string, currentStoreId: string): Promise<b
   
   try {
     const res = await globalThis.fetch(url, {
-      signal: AbortSignal.timeout(4000),
+      signal: getAbortSignalWithTimeout(4000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -924,7 +951,7 @@ async function saveStoreToFirestore(storeId: string, data: StoreData): Promise<b
     const fields = toFirestoreFields(cleanData);
     
     const res = await globalThis.fetch(url, {
-      signal: AbortSignal.timeout(4000),
+      signal: getAbortSignalWithTimeout(4000),
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields })
@@ -983,7 +1010,7 @@ async function syncStoreBySlugOrId(slugOrId: string): Promise<StoreData | undefi
     };
     
     const res = await globalThis.fetch(url, {
-      signal: AbortSignal.timeout(4000),
+      signal: getAbortSignalWithTimeout(4000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
