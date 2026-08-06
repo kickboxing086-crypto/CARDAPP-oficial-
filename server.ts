@@ -136,11 +136,12 @@ const getAbortSignalWithTimeout = (ms: number): any => {
   }
   try {
     const controller = new AbortController();
-    setTimeout(() => {
+    const t = setTimeout(() => {
       try {
         controller.abort();
       } catch (e) {}
     }, ms);
+    if (t.unref) t.unref();
     return controller.signal;
   } catch (err) {
     return null;
@@ -149,7 +150,7 @@ const getAbortSignalWithTimeout = (ms: number): any => {
 
 // Use native Node 18 fetch with safe timeout
 const customFetch = (url: string, options: any = {}) => {
-  const signal = options.signal || getAbortSignalWithTimeout(4500);
+  const signal = options.signal || getAbortSignalWithTimeout(8000);
   const fetchOpts: any = { ...options };
   if (signal) {
     fetchOpts.signal = signal;
@@ -408,7 +409,7 @@ async function syncTransactionsFromFirestore() {
   };
   try {
     const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(4000),
+      signal: getAbortSignalWithTimeout(8000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -589,7 +590,7 @@ async function queryStoreByEmail(email: string): Promise<StoreData | undefined> 
 
     try {
       const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(4000),
+      signal: getAbortSignalWithTimeout(8000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -660,7 +661,7 @@ async function queryStoreByUsername(username: string): Promise<StoreData | undef
 
     try {
       const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(4000),
+      signal: getAbortSignalWithTimeout(8000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -731,7 +732,7 @@ async function isStoreSlugTaken(slug: string, currentStoreId: string): Promise<b
   
   try {
     const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(4000),
+      signal: getAbortSignalWithTimeout(8000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -786,7 +787,7 @@ async function saveStoreToFirestore(storeId: string, data: StoreData): Promise<b
     const fields = toFirestoreFields(cleanData);
     
     const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(4000),
+      signal: getAbortSignalWithTimeout(8000),
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields })
@@ -845,7 +846,7 @@ async function syncStoreBySlugOrId(slugOrId: string): Promise<StoreData | undefi
     };
     
     const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(4000),
+      signal: getAbortSignalWithTimeout(8000),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
