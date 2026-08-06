@@ -7,6 +7,14 @@ try {
   console.warn('[System] Could not set DNS default result order:', dnsErr);
 }
 import express from 'express';
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[System] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[System] Uncaught Exception:', err);
+});
+
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
@@ -150,7 +158,7 @@ const getAbortSignalWithTimeout = (ms: number): any => {
 
 // Use native Node 18 fetch with safe timeout
 const customFetch = (url: string, options: any = {}) => {
-  const signal = options.signal || getAbortSignalWithTimeout(8000);
+  const signal = options.signal || getAbortSignalWithTimeout(2500);
   const fetchOpts: any = { ...options };
   if (signal) {
     fetchOpts.signal = signal;
@@ -276,7 +284,7 @@ async function saveDeletedStoresToFirestore() {
   try {
     const list = Array.from(deletedStoreIds);
     const fields = toFirestoreFields({ ids: list });
-    await fetch(url, {
+    await customFetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields })
@@ -292,7 +300,7 @@ async function loadDeletedStoresFromFirestore() {
   const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents/config/deleted_stores?key=${apiKey}`;
   try {
-    const res = await fetch(url);
+    const res = await customFetch(url);
     if (res.status === 200) {
       const data = await res.json() as any;
       if (data.fields) {
@@ -408,8 +416,8 @@ async function syncTransactionsFromFirestore() {
     }
   };
   try {
-    const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(8000),
+    const res = await customFetch(url, {
+      signal: getAbortSignalWithTimeout(2500),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -447,7 +455,7 @@ async function saveTransactionToFirestore(tx: any) {
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents/transactions/${tx.id}?key=${apiKey}`;
   try {
     const fields = toFirestoreFields(tx);
-    await fetch(url, {
+    await customFetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields })
@@ -462,7 +470,7 @@ async function deleteTransactionFromFirestore(txId: string) {
   const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents/transactions/${txId}?key=${apiKey}`;
   try {
-    await fetch(url, { method: 'DELETE' });
+    await customFetch(url, { method: 'DELETE' });
   } catch (e) {
     console.error('[Firebase REST] Error deleting tx from Firestore:', e);
   }
@@ -517,7 +525,7 @@ async function syncStore(storeId: string): Promise<StoreData | undefined> {
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents/stores/${storeId}?key=${apiKey}`;
   
   try {
-    const res = await fetch(url);
+    const res = await customFetch(url);
     if (res.status === 200) {
       const data = await res.json() as any;
       if (data.fields) {
@@ -589,8 +597,8 @@ async function queryStoreByEmail(email: string): Promise<StoreData | undefined> 
     };
 
     try {
-      const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(8000),
+      const res = await customFetch(url, {
+      signal: getAbortSignalWithTimeout(2500),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -660,8 +668,8 @@ async function queryStoreByUsername(username: string): Promise<StoreData | undef
     };
 
     try {
-      const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(8000),
+      const res = await customFetch(url, {
+      signal: getAbortSignalWithTimeout(2500),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -731,8 +739,8 @@ async function isStoreSlugTaken(slug: string, currentStoreId: string): Promise<b
   };
   
   try {
-    const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(8000),
+    const res = await customFetch(url, {
+      signal: getAbortSignalWithTimeout(2500),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -786,8 +794,8 @@ async function saveStoreToFirestore(storeId: string, data: StoreData): Promise<b
     const cleanData = JSON.parse(JSON.stringify(data));
     const fields = toFirestoreFields(cleanData);
     
-    const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(8000),
+    const res = await customFetch(url, {
+      signal: getAbortSignalWithTimeout(2500),
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields })
@@ -845,8 +853,8 @@ async function syncStoreBySlugOrId(slugOrId: string): Promise<StoreData | undefi
       }
     };
     
-    const res = await globalThis.fetch(url, {
-      signal: getAbortSignalWithTimeout(8000),
+    const res = await customFetch(url, {
+      signal: getAbortSignalWithTimeout(2500),
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -917,7 +925,7 @@ async function initialFirestoreSync() {
     }
   };
   try {
-    const fetchRes = await fetch(url, {
+    const fetchRes = await customFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(queryBody)
@@ -963,7 +971,7 @@ async function syncAllLocalStoresToFirestore() {
     try {
       const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
       const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents/stores/${storeId}?key=${apiKey}`;
-      const res = await fetch(url);
+      const res = await customFetch(url);
       if (res.status === 404) {
         console.log(`[Firebase REST] Local store ${storeId} not found in Firestore. Uploading...`);
         await saveStoreToFirestore(storeId, storeData);
@@ -2016,7 +2024,7 @@ app.get('/api/super/stores', superAuth, async (req: any, res: any) => {
       }
     };
     try {
-      const fetchRes = await fetch(url, {
+      const fetchRes = await customFetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryBody)
@@ -2232,7 +2240,7 @@ app.delete('/api/super/stores/:id', superAuth, async (req: any, res: any) => {
     const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents/stores/${encodeURIComponent(storeId)}?key=${apiKey}`;
     try {
-      await fetch(url, { method: 'DELETE' });
+      await customFetch(url, { method: 'DELETE' });
     } catch (e) {
       console.error(`[Firebase REST] Error deleting store document ${storeId}:`, e);
     }
@@ -2274,7 +2282,7 @@ app.post('/api/super/reset-all-data', superAuth, async (req: any, res: any) => {
         const queryUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents:runQuery?key=${apiKey}`;
         const body = { structuredQuery: { from: [{ collectionId: col }], limit: 300 } };
         try {
-          const r = await fetch(queryUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const r = await customFetch(queryUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
           if (r.status === 200) {
             const rows = await r.json() as any[];
             if (Array.isArray(rows)) {
@@ -2282,7 +2290,7 @@ app.post('/api/super/reset-all-data', superAuth, async (req: any, res: any) => {
                 if (row.document?.name) {
                   const docId = row.document.name.split('/').pop();
                   if (col === 'stores' && docId === 'master-ceo') continue;
-                  await fetch(`https://firestore.googleapis.com/v1/${row.document.name}?key=${apiKey}`, { method: 'DELETE' });
+                  await customFetch(`https://firestore.googleapis.com/v1/${row.document.name}?key=${apiKey}`, { method: 'DELETE' });
                 }
               }
             }
