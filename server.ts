@@ -12,7 +12,6 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'node:url';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
 import { Product, StoreSettings, Order, OrderStatus } from './src/types.js';
 
 let _filename = '';
@@ -158,16 +157,6 @@ const customFetch = (url: string, options: any = {}) => {
   return globalThis.fetch(url, fetchOpts);
 };
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey, {
-  global: { fetch: customFetch }
-}) : null;
-if (supabase) {
-  console.log('[Supabase] Client initialized successfully.');
-} else {
-  console.log('[Supabase] Client NOT initialized. Missing variables.');
-}
 
 // Load configuration from environment variables
 if (!firestoreConfig) {
@@ -362,104 +351,6 @@ function saveDataLocalOnly() {
 }
 
 
-// --- SUPABASE SYNC FUNCTIONS ---
-async function saveStoreToSupabase(storeId, data) {
-  if (!supabase) return false;
-  try {
-    const { error } = await supabase
-      .from('stores')
-      .upsert({
-        id: storeId,
-        email: data.email || '',
-        username: data.username || '',
-        password: data.password || '',
-        settings: data.settings || {},
-        products: data.products || [],
-        orders: data.orders || [],
-        updated_at_local: Date.now()
-      });
-    if (error) {
-      console.error('[Supabase] Error saving store:', error);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error('[Supabase] Exception saving store:', err);
-    return false;
-  }
-}
-
-async function syncStoreFromSupabase(storeId) {
-  if (!supabase) return undefined;
-  try {
-    const { data, error } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('id', storeId)
-      .single();
-    if (error || !data) return undefined;
-    
-    return {
-      id: data.id,
-      email: data.email,
-      username: data.username,
-      password: data.password,
-      settings: data.settings || {},
-      products: data.products || [],
-      orders: data.orders || [],
-      createdAt: data.created_at || new Date().toISOString(),
-      updatedAtLocal: data.updated_at_local || 0
-    };
-  } catch (err) {
-    console.error('[Supabase] Exception syncing store:', err);
-    return undefined;
-  }
-}
-
-async function saveTransactionToSupabase(tx) {
-  if (!supabase) return;
-  try {
-    await supabase.from('transactions').upsert({
-      id: tx.id,
-      store_id: tx.storeId || tx.store_id,
-      store_name: tx.storeName || tx.store_name,
-      plan_type: tx.planType || tx.plan_type,
-      amount: tx.amount,
-      date: tx.date
-    });
-  } catch (err) {
-    console.error('[Supabase] Error saving transaction:', err);
-  }
-}
-
-async function syncTransactionsFromSupabase() {
-  if (!supabase) return;
-  try {
-    const { data, error } = await supabase.from('transactions').select('*');
-    if (error || !data) return;
-    
-    const mapped = data.map(tx => ({
-      id: tx.id,
-      storeId: tx.store_id,
-      storeName: tx.store_name,
-      planType: tx.plan_type,
-      amount: tx.amount,
-      date: tx.date
-    }));
-    
-    // Merge logic
-    const existingIds = new Set(transactions.map(t => t.id));
-    for (const tx of mapped) {
-      if (!existingIds.has(tx.id) && !deletedTransactionIds.has(tx.id)) {
-        transactions.push(tx);
-        existingIds.add(tx.id);
-      }
-    }
-  } catch (err) {
-    console.error('[Supabase] Error syncing transactions:', err);
-  }
-}
-
 // --- PLATFORM TRANSACTIONS (REVENUE/BILLING HISTORY) ---
 let transactions: Array<any> = [];
 let deletedTransactionIds = new Set<string>();
@@ -507,7 +398,6 @@ function loadTransactionsLocal() {
 }
 
 async function syncTransactionsFromFirestore() {
-  if (supabase) { await syncTransactionsFromSupabase(); }
   if (!firestoreConfig) return;
   const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents:runQuery?key=${apiKey}`;
@@ -550,7 +440,6 @@ async function syncTransactionsFromFirestore() {
 }
 
 async function saveTransactionToFirestore(tx: any) {
-  if (supabase) { await saveTransactionToSupabase(tx); }
   saveTransactionsLocal();
   if (!firestoreConfig) return;
   const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
@@ -582,19 +471,6 @@ async function deleteTransactionFromFirestore(txId: string) {
 async function syncStore(storeId: string): Promise<StoreData | undefined> {
   let localStore = stores.get(storeId);
   
-  if (supabase) {
-    const supabaseStore = await syncStoreFromSupabase(storeId);
-    if (supabaseStore) {
-      const fsTime = supabaseStore.updatedAtLocal || 0;
-      const localTime = localStore?.updatedAtLocal || 0;
-      if (fsTime > localTime || !localStore) {
-         stores.set(storeId, supabaseStore);
-         saveDataLocalOnly();
-         localStore = supabaseStore;
-      }
-    }
-  }
-
   const now = Date.now();
 
   // Smart Sync & Race-Condition Protection:
@@ -695,38 +571,7 @@ async function queryStoreByEmail(email: string): Promise<StoreData | undefined> 
   if (!normEmail) return undefined;
 
   // We always query Firestore to ensure we have all matching stores synced
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.from('stores').select('*');
-      if (!error && data) {
-        for (const item of data) {
-          if (deletedStoreIds.has(item.id)) continue;
-          
-          const localStore = stores.get(item.id);
-          const fsTime = item.updated_at_local || 0;
-          const localTime = localStore?.updatedAtLocal || 0;
-          
-          if (fsTime > localTime || !localStore) {
-             const storeObj = {
-                id: item.id,
-                email: item.email,
-                username: item.username,
-                password: item.password,
-                settings: item.settings || {},
-                products: item.products || [],
-                orders: item.orders || [],
-                createdAt: item.created_at || new Date().toISOString(),
-                updatedAtLocal: item.updated_at_local || 0
-             };
-             stores.set(item.id, storeObj);
-          }
-        }
-        saveDataLocalOnly();
-      }
-    } catch (err) {
-      console.error('[Supabase] Error fetching all stores:', err);
-    }
-  } else if (firestoreConfig) {
+  if (firestoreConfig) {
     const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${firestoreDatabaseId}/documents:runQuery?key=${apiKey}`;
     const queryBody = {
@@ -866,15 +711,6 @@ async function isStoreSlugTaken(slug: string, currentStoreId: string): Promise<b
   const localTaken = Array.from(stores.values()).some(s => s.id !== currentStoreId && (s.settings?.storeSlug?.toLowerCase().trim() === norm || s.id?.toLowerCase().trim() === norm));
   if (localTaken) return true;
   
-  if (supabase) {
-     const { data } = await supabase.from('stores')
-       .select('id')
-       .or(`id.eq.${norm},settings->>storeSlug.eq.${norm}`)
-       .neq('id', currentStoreId)
-       .limit(1);
-     if (data && data.length > 0) return true;
-  }
-  
   if (!firestoreConfig) return false;
   
   const { projectId, firestoreDatabaseId, apiKey } = firestoreConfig;
@@ -934,7 +770,6 @@ async function isStoreSlugTaken(slug: string, currentStoreId: string): Promise<b
 
 // Saves a store document to Firestore
 async function saveStoreToFirestore(storeId: string, data: StoreData): Promise<boolean> {
-  if (supabase) { await saveStoreToSupabase(storeId, data); }
   data.updatedAtLocal = Date.now();
   data.lastSavedToFirestore = Date.now();
   stores.set(storeId, data);
