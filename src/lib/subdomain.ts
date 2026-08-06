@@ -35,9 +35,10 @@ export function getStoreIdFromHostname(hostname: string): string | null {
     if (host === 'cardappio-foodblue.vercel.app') return null;
     if (host === 'foodblue.vercel.app') return null;
     if (host === 'cardappio-psi.vercel.app') return null;
+    if (host === 'cardapp-officiall.vercel.app') return null;
     
     // Standard system subdomains
-    const excluded = ['www', 'api', 'admin', 'app', 'dev', 'preview'];
+    const excluded = ['www', 'api', 'admin', 'app', 'dev', 'preview', 'cardapp-officiall'];
     
     // For Vercel/Run.app, if it has exactly 3 parts (sub.vercel.app), 
     // we only treat it as a store if 'sub' is not a system name.
@@ -46,7 +47,7 @@ export function getStoreIdFromHostname(hostname: string): string | null {
       if (excluded.includes(sub)) return null;
       
       // Additional check: if 'sub' is the project name itself
-      if (sub === 'cardappio-foodblue' || sub === 'foodblue' || sub === 'hortifrutiexpres' || sub === 'cardappio-psi') return null;
+      if (sub === 'cardappio-foodblue' || sub === 'foodblue' || sub === 'hortifrutiexpres' || sub === 'cardappio-psi' || sub === 'cardapp-officiall') return null;
       
       return sub;
     }

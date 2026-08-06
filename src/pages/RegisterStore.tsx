@@ -4,6 +4,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Store, User, Mail, Smartphone, ArrowRight, Loader2, MessageCircle } from 'lucide-react';
 import CardappLogo from '../components/CardappLogo';
+import { getApiUrl } from '../lib/api';
 
 export default function RegisterStore() {
   const [searchParams] = useSearchParams();
@@ -32,7 +33,7 @@ export default function RegisterStore() {
     setRegistrationError('');
 
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch(getApiUrl('/api/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

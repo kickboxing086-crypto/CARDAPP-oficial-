@@ -2552,12 +2552,13 @@ function getStoreIdFromHost(host: string | undefined): string | null {
     h.includes('webcontainer') || 
     h.includes('stackblitz') ||
     h === 'cardappio-foodblue.vercel.app' ||
-    h === 'foodblue.vercel.app'
+    h === 'foodblue.vercel.app' ||
+    h === 'cardapp-officiall.vercel.app'
   ) {
     return null;
   }
   const parts = h.split(':')[0].split('.');
-  const EXCLUDED = ['www', 'api', 'admin', 'app', 'dev', 'preview', 'hortifrutiexpres', 'cardapp', 'cardappio-foodblue', 'foodblue'];
+  const EXCLUDED = ['www', 'api', 'admin', 'app', 'dev', 'preview', 'hortifrutiexpres', 'cardapp', 'cardappio-foodblue', 'foodblue', 'cardapp-officiall'];
 
   if (h.includes('.vercel.app')) {
     if (parts.length > 2) {
