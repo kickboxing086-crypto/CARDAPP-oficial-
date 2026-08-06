@@ -121,9 +121,19 @@ for (const configPath of configPaths) {
 
 
 // --- SUPABASE SETUP ---
+import nodeFetch from 'node-fetch';
+import { Agent } from 'https';
+
+const ipv4Agent = new Agent({ family: 4 }); // Force IPv4
+// Override fetch for the whole file
+const fetch = (url, options = {}) => nodeFetch(url, { ...options, agent: ipv4Agent });
+const customFetch = fetch;
+
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey, {
+  global: { fetch: customFetch }
+}) : null;
 if (supabase) {
   console.log('[Supabase] Client initialized successfully.');
 } else {
