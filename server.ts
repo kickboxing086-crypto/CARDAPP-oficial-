@@ -1476,7 +1476,7 @@ app.post('/api/login', async (req, res) => {
   const identity = (email || username || '').toLowerCase().trim();
   
   // Super Admin Check (both user mail and default main store owner)
-  const isSuperIdentity = identity === 'samuellsilvva02@gmail.com' || identity === 'kickboxing086@gmail.com' || identity === 'admin@cardapp.com' || identity === 'samuelsilva';
+  const isSuperIdentity = identity === 'samuellsilvva02@gmail.com' || identity === 'samuelsilva';
   
   // Sync matching stores to populate local cache safely
   try {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Store, ChevronRight, ArrowLeft, ShieldCheck, Globe, WifiOff, Eye, EyeOff } from 'lucide-react';
+import { Store, ChevronRight, ArrowLeft, Shield, Eye, EyeOff, LayoutDashboard, Sparkles } from 'lucide-react';
 import { getApiUrl } from '../lib/api';
 import CardappLogo from '../components/CardappLogo';
 
@@ -21,8 +21,8 @@ export default function AdminLogin() {
     const inputIdentity = identity.toLowerCase().trim();
     const inputPassword = password;
 
-    // MASTER CEO BYPASS: Always allow the CEO to enter immediately, even if the backend is offline or on a static static host
-    const isSuperIdentity = inputIdentity === 'samuellsilvva02@gmail.com' || inputIdentity === 'kickboxing086@gmail.com' || inputIdentity === 'admin@cardapp.com' || inputIdentity === 'samuelsilva';
+    // MASTER CEO BYPASS: Always allow the CEO to enter immediately, even if the backend is offline or on a static host
+    const isSuperIdentity = inputIdentity === 'samuellsilvva02@gmail.com' || inputIdentity === 'samuelsilva';
     const isMasterCEO = isSuperIdentity && (inputPassword === '86113980' || inputPassword === 'admin123' || inputPassword === '861139');
 
     if (isMasterCEO) {
@@ -41,34 +41,28 @@ export default function AdminLogin() {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const url = getApiUrl('/api/login');
+      console.log('Iniciando login via API:', url);
+      
       let res;
-      let data;
-
       try {
-        const url = getApiUrl('/api/login');
-        console.log('Iniciando login via API:', url);
-        
-        try {
-          res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: identity, password })
-          });
-        } catch (networkErr) {
-          throw new Error('Erro de conexão ao servidor. Tente novamente em alguns segundos.');
-        }
-        
-        const contentType = res.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          data = await res.json();
-        }
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: identity, password })
+        });
+      } catch (networkErr) {
+        throw new Error('Erro de conexão ao servidor. Verifique se o servidor de desenvolvimento está rodando.');
+      }
 
-        if (!res.ok) {
-          throw new Error(data?.error || `Erro do Servidor (${res.status})`);
-        }
-      } catch (fetchErr: any) {
-        throw fetchErr;
+      const contentType = res.headers.get('content-type');
+      let data;
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.error || `Credenciais inválidas ou erro no servidor (${res.status})`);
       }
 
       if (data && data.success) {
@@ -94,7 +88,7 @@ export default function AdminLogin() {
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message === 'Failed to fetch' 
-        ? 'Erro de rede: Não foi possível conectar ao servidor. Verifique sua internet ou se o backend está online.' 
+        ? 'Erro de rede: Não foi possível conectar ao servidor. Verifique sua conexão ou se o backend está online.' 
         : (err.message || 'Erro ao conectar ao servidor de autenticação'));
     } finally {
       setIsLoading(false);
@@ -106,8 +100,6 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     const url = getApiUrl('/api/login');
-    console.log('Selecionando loja via API:', url);
-
     try {
       const res = await fetch(url, {
         method: 'POST',
@@ -132,138 +124,204 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 py-8 relative overflow-hidden">
-      {/* Subtle Background Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/10 via-zinc-950 to-zinc-950 pointer-events-none" />
-
-      <div className="max-w-md w-full bg-zinc-900 p-8 rounded-3xl shadow-2xl border border-white/5 relative z-10">
-        <div className="flex flex-col items-center mb-6">
-          <div className="mb-4">
-            <CardappLogo size="lg" />
-          </div>
-          <h1 className="text-xl font-black text-white tracking-tight">
-            {multipleStores ? 'Selecione Sua Loja' : 'Painel de Acesso'}
-          </h1>
-          <p className="text-zinc-400 text-sm mt-1">
-            {multipleStores ? 'Encontramos mais de uma loja em seu cadastro:' : 'Insira suas credenciais de acesso'}
-          </p>
+    <div className="min-h-screen flex bg-stone-50 text-neutral-900 font-sans">
+      
+      {/* LEFT COLUMN: Visual & Branding (Desktop Only) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-stone-900 p-16 flex-col justify-between relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute -bottom-48 -left-48 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+        
+        <div className="z-10 flex items-center gap-3">
+          <CardappLogo size="md" />
+          <div className="h-6 w-[1px] bg-neutral-700" />
+          <span className="text-stone-400 text-xs tracking-widest font-bold uppercase">Painel de Controle</span>
         </div>
 
-        {error && (
-          <div className="bg-rose-950/30 text-rose-400 p-4 rounded-xl mb-6 text-xs text-center font-bold border border-rose-900/50">
-            {error}
+        <div className="z-10 max-w-lg my-auto space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold">
+            <Sparkles className="w-3.5 h-3.5" />
+            Ecossistema de Vendas
           </div>
-        )}
-
-        {multipleStores ? (
-          <div className="space-y-4">
-            <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-              {multipleStores.map((store) => (
-                <button
-                  key={store.id}
-                  onClick={() => handleSelectStore(store.id)}
-                  disabled={isLoading}
-                  className="w-full flex items-center justify-between p-4 bg-zinc-950 hover:bg-amber-500/10 hover:border-amber-500/30 border border-white/5 rounded-2xl transition-all group disabled:opacity-50 text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                      {store.logo ? (
-                        <img src={store.logo} alt={store.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                      ) : (
-                        <Store className="w-5 h-5 text-zinc-500" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">{store.name}</h4>
-                      <p className="text-zinc-400 text-xs font-semibold font-mono">/{store.slug}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:translate-x-1 group-hover:text-amber-500 transition-all shrink-0" />
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setMultipleStores(null)}
-              disabled={isLoading}
-              className="w-full py-3 text-zinc-500 hover:text-white text-xs font-black uppercase tracking-widest transition-colors cursor-pointer flex items-center justify-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar ao Login
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 tracking-wide uppercase mb-1">E-mail ou Usuário</label>
-              <input 
-                type="text" 
-                required
-                disabled={isLoading}
-                value={identity}
-                onChange={e => setIdentity(e.target.value)}
-                className="w-full px-4 py-2.5 bg-zinc-950 text-white border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-sm font-semibold placeholder:text-zinc-600"
-                placeholder="Digite seu e-mail ou usuário"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 tracking-wide uppercase mb-1">Senha</label>
-              <div className="relative">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  required
-                  disabled={isLoading}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full pl-4 pr-12 py-2.5 bg-zinc-950 text-white border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all text-sm font-semibold placeholder:text-zinc-600"
-                  placeholder="Sua senha secreta"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-white transition-colors cursor-pointer"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-            >
-              {isLoading ? 'Autenticando...' : 'Acessar Canal Seguro'}
-            </button>
-            
-            <div className="pt-4 border-t border-white/5 mt-6">
-              <Link 
-                to="/admin/register"
-                className="w-full flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-white/20 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group"
-              >
-                <span className="text-xs font-bold text-zinc-400 mb-1 group-hover:text-zinc-300 transition-colors">Ainda não tem uma loja?</span>
-                <span className="text-sm font-black text-amber-500 flex items-center gap-2">
-                  Comece seu teste de 7 dias grátis
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </Link>
-            </div>
-          </form>
-        )}
-
-        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-6">
-            <button onClick={() => navigate('/termos-e-privacidade')} className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-amber-400 transition-colors">Políticas</button>
-            <button onClick={() => navigate('/termos-e-privacidade')} className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-amber-400 transition-colors">Privacidade</button>
-          </div>
-          <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em]">
-            © {new Date().getFullYear()} Cardapp Brasil
+          <h2 className="text-4xl font-extrabold text-white tracking-tight leading-tight">
+            Gerencie seu cardápio, pedidos e clientes em um único lugar.
+          </h2>
+          <p className="text-stone-400 text-base leading-relaxed">
+            Plataforma robusta para hortifrútis, restaurantes e comércios locais venderem online de forma integrada e sem taxas abusivas.
           </p>
+          
+          <div className="grid grid-cols-2 gap-6 pt-6 border-t border-white/5">
+            <div>
+              <h4 className="text-white font-bold text-sm">Painel Rápido</h4>
+              <p className="text-stone-400 text-xs mt-1">Atualizações de estoque em tempo real e alteração de preços facilitada.</p>
+            </div>
+            <div>
+              <h4 className="text-white font-bold text-sm">Integração WhatsApp</h4>
+              <p className="text-stone-400 text-xs mt-1">Envie notificações automáticas dos pedidos diretamente para o cliente.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="z-10 flex items-center justify-between pt-8 border-t border-white/5 text-stone-500 text-xs font-semibold">
+          <span>Cardapp Brasil</span>
+          <span>Suporte e Segurança Ativados</span>
         </div>
       </div>
+
+      {/* RIGHT COLUMN: Auth Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12">
+        <div className="max-w-md w-full bg-white p-8 md:p-10 rounded-2xl border border-stone-200/60 shadow-lg relative">
+          
+          {/* Logo on Mobile only */}
+          <div className="flex justify-center mb-8 lg:hidden">
+            <CardappLogo size="md" />
+          </div>
+
+          <div className="mb-8">
+            <div className="flex items-center gap-2 text-stone-500 text-xs font-bold uppercase tracking-wider mb-2">
+              <Shield className="w-4 h-4 text-amber-500" />
+              Ambiente de Acesso Protegido
+            </div>
+            <h1 className="text-2xl font-black text-neutral-900 tracking-tight">
+              {multipleStores ? 'Selecione sua Loja' : 'Acesse sua Conta'}
+            </h1>
+            <p className="text-stone-500 text-sm mt-1">
+              {multipleStores 
+                ? 'Identificamos múltiplos estabelecimentos vinculados.' 
+                : 'Insira suas credenciais para entrar no painel de administração.'
+              }
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-rose-50 text-rose-600 p-4 rounded-xl mb-6 text-xs font-bold border border-rose-100 flex items-start gap-2.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {multipleStores ? (
+            <div className="space-y-4">
+              <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1">
+                {multipleStores.map((store) => (
+                  <button
+                    key={store.id}
+                    onClick={() => handleSelectStore(store.id)}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-between p-4 bg-stone-50 hover:bg-amber-50/60 hover:border-amber-500/40 border border-stone-200/60 rounded-xl transition-all group disabled:opacity-50 text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-lg bg-white border border-stone-200 flex items-center justify-center overflow-hidden shrink-0">
+                        {store.logo ? (
+                          <img src={store.logo} alt={store.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                        ) : (
+                          <Store className="w-5 h-5 text-stone-400" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-neutral-900 text-sm">{store.name}</h4>
+                        <p className="text-stone-500 text-xs font-semibold font-mono">/{store.slug}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-stone-400 group-hover:translate-x-1 group-hover:text-amber-600 transition-all shrink-0" />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setMultipleStores(null)}
+                disabled={isLoading}
+                className="w-full py-3.5 text-stone-500 hover:text-neutral-900 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Voltar ao formulário
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              
+              <div>
+                <label className="block text-xs font-extrabold text-stone-500 tracking-wider uppercase mb-1.5">E-mail ou Usuário</label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    required
+                    disabled={isLoading}
+                    value={identity}
+                    onChange={e => setIdentity(e.target.value)}
+                    className="w-full px-4 py-3 bg-stone-50 text-neutral-900 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm font-semibold placeholder:text-stone-400"
+                    placeholder="exemplo@email.com ou usuario"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-extrabold text-stone-500 tracking-wider uppercase">Senha</label>
+                </div>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    required
+                    disabled={isLoading}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full pl-4 pr-12 py-3 bg-stone-50 text-neutral-900 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm font-semibold placeholder:text-stone-400"
+                    placeholder="Digite sua senha"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-stone-950 font-black py-3.5 rounded-xl shadow-md hover:shadow-amber-500/10 transition-all duration-150 text-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+              >
+                {isLoading ? 'Verificando...' : 'Entrar no Painel'}
+                {!isLoading && <ChevronRight className="w-4 h-4" />}
+              </button>
+              
+              <div className="pt-6 border-t border-stone-200 mt-6">
+                <Link 
+                  to="/admin/register"
+                  className="w-full flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-stone-300 hover:border-amber-500/50 hover:bg-amber-50/30 transition-all group"
+                >
+                  <span className="text-xs font-extrabold text-stone-500 mb-1">Deseja criar uma nova loja?</span>
+                  <span className="text-sm font-bold text-amber-600 flex items-center gap-1 group-hover:text-amber-700">
+                    Registre-se gratuitamente
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
+                </Link>
+              </div>
+
+            </form>
+          )}
+
+          <div className="mt-8 pt-6 border-t border-stone-200 flex flex-col items-center gap-3 text-stone-400 text-xs font-semibold">
+            <div className="flex items-center gap-5">
+              <Link to="/termos-e-privacidade" className="hover:text-amber-600 transition-colors">Termos de Uso</Link>
+              <div className="w-1 h-1 rounded-full bg-stone-300" />
+              <Link to="/termos-e-privacidade" className="hover:text-amber-600 transition-colors">Privacidade</Link>
+            </div>
+            <p className="text-[10px] text-stone-400 uppercase tracking-wider">
+              © {new Date().getFullYear()} Cardapp Brasil • Todos os direitos reservados
+            </p>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   );
 }

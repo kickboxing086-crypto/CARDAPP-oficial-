@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Settings, Package, ShoppingBag, Plus, Trash2, Camera, Edit2, CreditCard, QrCode, Share2, Copy, CheckCircle2, Clock, MapPin, Sparkles, Palette, Eye, Building, Check, Store, Printer, RotateCw, HelpCircle, X, Bell, Trash, ShieldCheck, LogOut, Lock, MessageSquare, MessageCircle, TrendingUp, Calendar, FileSpreadsheet, ChevronDown, AlertTriangle, RefreshCw, Banknote, Briefcase, UtensilsCrossed, Truck, AlertCircle, Hash, Moon, Sun, ExternalLink, Search, ChevronRight, Database, Globe, Menu, ArrowLeft, User, Tag, Users, Link as LinkIcon, CheckSquare, Crown } from 'lucide-react';
 import { getApiUrl, getAuthHeaders } from '../lib/api';
 import { Product, StoreSettings, Order, OrderStatus, DeliveryZone, DaySchedule, PaymentMethod } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import CardappLogo from '../components/CardappLogo';
 
 // Elegant Animated Toggle Component for 'Yes/No' options
@@ -1151,7 +1151,7 @@ export default function AdminDashboard() {
   const handleCreateAmbassador = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAmbassadorName) return;
-    const masterStore = superStores.find(s => s.id === 'master-ceo' || s.email === 'kickboxing086@gmail.com' || s.email === 'samuellsilvva02@gmail.com') || superStores[0];
+    const masterStore = superStores.find(s => s.id === 'master-ceo' || s.email === 'samuellsilvva02@gmail.com') || superStores[0];
     const masterId = masterStore ? masterStore.id : 'master-ceo';
     const settings = masterStore?.settings || {};
     const ambassadors = settings.ambassadors || [];
@@ -1196,7 +1196,7 @@ export default function AdminDashboard() {
 
   const handleDeleteAmbassador = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja remover este divulgador?')) return;
-    const masterStore = superStores.find(s => s.id === 'master-ceo' || s.email === 'kickboxing086@gmail.com' || s.email === 'samuellsilvva02@gmail.com') || superStores[0];
+    const masterStore = superStores.find(s => s.id === 'master-ceo' || s.email === 'samuellsilvva02@gmail.com') || superStores[0];
     const masterId = masterStore ? masterStore.id : 'master-ceo';
     const settings = masterStore?.settings || {};
     const ambassadors = (settings.ambassadors || []).filter((a: any) => a.id !== id);
@@ -2837,7 +2837,7 @@ export default function AdminDashboard() {
                     <div className="bg-black/60 p-3.5 rounded-2xl border border-zinc-800 text-center min-w-[120px]">
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Divulgadores</span>
                       <span className="text-xl font-black text-amber-400">
-                        {((superStores.find(s => s.id === 'master-ceo' || s.email === 'kickboxing086@gmail.com' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).length}
+                        {((superStores.find(s => s.id === 'master-ceo' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).length}
                       </span>
                     </div>
                     <div className="bg-black/60 p-3.5 rounded-2xl border border-zinc-800 text-center min-w-[120px]">
@@ -2914,17 +2914,17 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
                     <Users className="w-5 h-5 text-amber-400" />
-                    Divulgadores Cadastrados ({((superStores.find(s => s.id === 'master-ceo' || s.email === 'kickboxing086@gmail.com' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).length})
+                    Divulgadores Cadastrados ({((superStores.find(s => s.id === 'master-ceo' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).length})
                   </h3>
                 </div>
 
-                {((superStores.find(s => s.id === 'master-ceo' || s.email === 'kickboxing086@gmail.com' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).length === 0 ? (
+                {((superStores.find(s => s.id === 'master-ceo' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).length === 0 ? (
                   <div className="bg-zinc-900/60 p-12 text-center rounded-3xl border border-zinc-800 text-zinc-500 font-semibold">
                     Nenhum divulgador cadastrado ainda. Utilize o formulário acima para criar o primeiro parceiro!
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {((superStores.find(s => s.id === 'master-ceo' || s.email === 'kickboxing086@gmail.com' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).map((amb: any) => {
+                    {((superStores.find(s => s.id === 'master-ceo' || s.email === 'samuellsilvva02@gmail.com') || superStores[0])?.settings?.ambassadors || []).map((amb: any) => {
                       const referredStores = superStores.filter(s => s.settings?.referredBy === amb.code);
                       const referralsCount = referredStores.length;
                       const nameFormatted = (amb.name || amb.code || 'DIVULGADOR').trim().toUpperCase().replace(/\s+/g, '+');
