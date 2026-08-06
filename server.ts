@@ -1,5 +1,5 @@
 import dns from 'dns';
-dns.setDefaultResultOrder('ipv4first');
+if (!process.env.VERCEL) { dns.setDefaultResultOrder('ipv4first'); }
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -126,7 +126,12 @@ import { Agent } from 'https';
 
 const ipv4Agent = new Agent({ family: 4 }); // Force IPv4
 // Override fetch for the whole file
-const fetch = (url, options = {}) => nodeFetch(url, { ...options, agent: ipv4Agent });
+const fetch = (url, options = {}) => {
+  if (process.env.VERCEL) {
+    return globalThis.fetch(url, options);
+  }
+  return nodeFetch(url, { ...options, agent: ipv4Agent });
+};
 const customFetch = fetch;
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
