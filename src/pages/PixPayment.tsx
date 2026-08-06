@@ -26,7 +26,7 @@ export default function PixPayment() {
         </button>
 
         <button 
-          onClick={() => navigate('/register')}
+          onClick={() => navigate('/admin/register')}
           className="mt-6 text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-gray-600 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Voltar ao Registro

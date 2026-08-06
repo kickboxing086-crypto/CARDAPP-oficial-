@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Order, StoreSettings, Product } from '../types';
 import { Printer, Share2, MapPin, Phone, Calendar, Clock, ShoppingBag, CheckCircle2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { getApiUrl } from '../lib/api';
 import { getStoreIdFromHostname } from '../lib/subdomain';
 

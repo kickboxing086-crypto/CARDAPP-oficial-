@@ -1556,7 +1556,112 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.post('/api/register', async (req, res) => {
-  res.status(403).json({ error: 'Cadastro público desativado. Contate o administrador.' });
+  try {
+    const { email, username, password, storeName, phone, plan } = req.body || {};
+    
+    if (!email || !username || !password || !storeName || !phone) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios para a criação da loja.' });
+    }
+
+    const normEmail = email.toLowerCase().trim();
+    const normUsername = username.toLowerCase().trim();
+
+    // 1. Check if email or username is already taken in memory
+    const localUserTaken = Array.from(stores.values()).some(s => 
+      (s.email?.toLowerCase().trim() === normEmail) || 
+      (s.username?.toLowerCase().trim() === normUsername) ||
+      (s.id?.toLowerCase().trim() === normUsername)
+    );
+
+    if (localUserTaken) {
+      return res.status(400).json({ error: 'Este e-mail ou nome de usuário já está cadastrado por outra loja.' });
+    }
+
+    // 2. Query Firestore/Supabase to be 100% sure we don't have duplicates
+    try {
+      const emailMatch = await queryStoreByEmail(normEmail);
+      if (emailMatch) {
+        return res.status(400).json({ error: 'Este e-mail já está em uso por outra loja.' });
+      }
+      const userMatch = await queryStoreByUsername(normUsername);
+      if (userMatch) {
+        return res.status(400).json({ error: 'Este nome de usuário já está em uso por outra loja.' });
+      }
+    } catch (checkErr) {
+      console.warn('[API Register] Pre-registration duplicate check warning:', checkErr);
+    }
+
+    // 3. Generate a clean unique store slug/ID from the store name
+    const baseSlug = storeName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'loja-' + Math.random().toString(36).substring(2, 7);
+
+    let finalId = baseSlug;
+    try {
+      const isTaken = await isStoreSlugTaken(baseSlug, '');
+      if (isTaken) {
+        finalId = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+      }
+    } catch (slugErr) {
+      finalId = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+    }
+
+    console.log(`[API Register] Creating store: ID=${finalId}, Name=${storeName}, Email=${normEmail}`);
+
+    // 4. Formulate the clean StoreData
+    const newStore: StoreData = {
+      id: finalId,
+      email: normEmail,
+      username: normUsername,
+      password: password.trim(),
+      settings: {
+        storeName: storeName.trim(),
+        logo: '/logo.png',
+        storeNameFirst: storeName.trim().split(' ')[0],
+        storeNameFirstColor: '#1e293b',
+        primaryColor: '#fbbf24', // Default warm amber/gold
+        whatsappNumber: phone.replace(/\D/g, ''), // Digits only
+        storeSlug: finalId,
+        businessType: 'outros',
+        categories: ['Geral'],
+        locationAddress: '',
+        isOpen: true,
+        fontFamily: 'inter',
+        planType: plan || 'free',
+        planStartDate: new Date().toISOString()
+      },
+      products: [],
+      orders: [],
+      createdAt: new Date().toISOString()
+    };
+
+    // 5. Store in local Map cache and write file
+    stores.set(finalId, newStore);
+    saveDataLocalOnly();
+
+    // 6. Push document to Firestore/Supabase
+    try {
+      await saveStoreToFirestore(finalId, newStore);
+      console.log(`[API Register] Sync for ${finalId} successful.`);
+    } catch (syncErr) {
+      console.error('[API Register] Firestore save failed (non-blocking):', syncErr);
+    }
+
+    // 7. Auto-login by returning credentials
+    return res.json({
+      success: true,
+      message: 'Loja cadastrada com sucesso!',
+      token: finalId,
+      storeId: finalId
+    });
+
+  } catch (err: any) {
+    console.error('[API Register] Register error:', err);
+    return res.status(500).json({ error: 'Erro interno ao realizar cadastro. Tente novamente mais tarde.' });
+  }
 });
 // --- ADMIN MIDDLEWARE ---
 const adminAuth = async (req: any, res: any, next: any) => {

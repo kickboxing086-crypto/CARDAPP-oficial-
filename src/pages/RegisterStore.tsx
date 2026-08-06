@@ -10,10 +10,13 @@ export default function RegisterStore() {
   const refCode = searchParams.get('ref') || '';
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
   const [formData, setFormData] = useState({
     storeName: '',
     ownerName: '',
     username: '',
+    email: '',
+    password: '',
     phone: '',
     plan: searchParams.get('plan') || '7 Dias Grátis'
   });
@@ -26,25 +29,71 @@ export default function RegisterStore() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setRegistrationError('');
 
-    const message = encodeURIComponent(
-      `🚀 *Nova Solicitação de Loja - Cardapp*\n\n` +
-      `*Nome da Loja:* ${formData.storeName}\n` +
-      `*Responsável:* ${formData.ownerName}\n` +
-      `*Nome de Usuário:* ${formData.username}\n` +
-      `*WhatsApp:* ${formData.phone}\n` +
-      `*Plano Desejado:* ${formData.plan}\n` +
-      (refCode ? `*Indicado por (Código):* ${refCode}\n\n` : '\n') +
-      `Olá, gostaria de solicitar a criação da minha loja digital com o usuário: ${formData.username}.`
-    );
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          username: formData.username,
+          password: formData.password,
+          storeName: formData.storeName,
+          phone: formData.phone,
+          plan: formData.plan
+        })
+      });
 
-    setTimeout(() => {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar loja.');
+      }
+
+      // Success! Auto login
+      localStorage.setItem('admin_token', data.token);
+      localStorage.setItem('store_id', data.storeId);
+
+      // Trigger the WhatsApp notification in a separate window/tab
+      const message = encodeURIComponent(
+        `🚀 *Nova Loja Criada Automaticamente - Cardapp*\n\n` +
+        `*Nome da Loja:* ${formData.storeName}\n` +
+        `*Responsável:* ${formData.ownerName}\n` +
+        `*Nome de Usuário:* ${formData.username}\n` +
+        `*WhatsApp:* ${formData.phone}\n` +
+        `*Plano:* ${formData.plan}\n` +
+        (refCode ? `*Indicador:* ${refCode}\n` : '') +
+        `Olá! Acabei de criar a minha loja digital e já estou acessando o painel administrativo.`
+      );
+      
+      // Try to open WhatsApp in a new tab without blocking
+      try {
+        window.open(`https://wa.me/5584986113980?text=${message}`, '_blank');
+      } catch (err) {
+        console.warn('Could not open WhatsApp tab directly:', err);
+      }
+
+      // Redirect immediately to admin dashboard
+      navigate('/admin');
+
+    } catch (err: any) {
+      console.error('Registration failed:', err);
+      setRegistrationError(err.message || 'Erro ao realizar o cadastro de sua loja.');
+    } finally {
       setIsLoading(false);
-      window.location.href = `https://wa.me/5584986113980?text=${message}`;
-    }, 800);
+    }
   };
 
-  const isValid = formData.storeName.length > 0 && formData.ownerName.length > 0 && formData.username.length > 0 && formData.phone.length > 0;
+  const isValid = 
+    formData.storeName.trim().length > 0 && 
+    formData.ownerName.trim().length > 0 && 
+    formData.username.trim().length > 0 && 
+    formData.email.trim().length > 0 && 
+    formData.password.trim().length >= 6 && 
+    formData.phone.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6">
@@ -67,6 +116,13 @@ export default function RegisterStore() {
         <div className="bg-zinc-900 border border-white/5 rounded-3xl p-8 shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             
+            {registrationError && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-semibold rounded-xl flex items-center gap-2">
+                <span className="shrink-0 font-bold">⚠️</span>
+                <span>{registrationError}</span>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1 flex items-center gap-2">
                 <Store className="w-3 h-3" /> Nome da Loja
@@ -128,6 +184,38 @@ export default function RegisterStore() {
                 />
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                  <Mail className="w-3 h-3 text-amber-500" /> E-mail de Contato
+                </label>
+                <input 
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="Ex: contato@sualoja.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-zinc-950 text-white border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none transition-all placeholder:text-zinc-700 font-semibold"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                  <User className="w-3 h-3 text-amber-500" /> Senha (mín. 6 dgt)
+                </label>
+                <input 
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="Defina uma senha"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-zinc-950 text-white border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none transition-all placeholder:text-zinc-700 font-semibold"
+                />
+              </div>
+            </div>
             
             <div className="space-y-3">
               <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1 flex items-center gap-2">
@@ -183,8 +271,8 @@ export default function RegisterStore() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  <MessageCircle className="w-5 h-5" />
-                  Enviar Solicitação via WhatsApp
+                  <Store className="w-5 h-5" />
+                  Criar Minha Loja Agora
                 </>
               )}
             </button>

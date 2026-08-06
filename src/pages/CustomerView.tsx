@@ -7,6 +7,8 @@ import { getApiUrl } from '../lib/api';
 
 import { getStoreIdFromHostname } from '../lib/subdomain';
 import CardappLogo, { FoodTrayIcon } from '../components/CardappLogo';
+import { auth } from '../lib/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
 
 interface CartItem {
   product: Product;
@@ -65,8 +67,99 @@ export default function CustomerView({ overrideStoreId }: { overrideStoreId?: st
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [loginName, setLoginName] = useState('');
+  const [loginPhone, setLoginPhone] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [authError, setAuthError] = useState('');
+
+  // Synchronize onAuthStateChanged
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      if (user) {
+        if (user.displayName && !localStorage.getItem('cust_name')) {
+          setCustomerName(user.displayName);
+          localStorage.setItem('cust_name', user.displayName);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleCustomerLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setIsAuthLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      setShowLoginModal(false);
+      setLoginEmail('');
+      setLoginPassword('');
+    } catch (err: any) {
+      console.error('Customer login error:', err);
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setAuthError('E-mail ou senha incorretos.');
+      } else if (err.code === 'auth/invalid-email') {
+        setAuthError('Formato de e-mail inválido.');
+      } else {
+        setAuthError(err.message || 'Erro ao realizar login.');
+      }
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleCustomerRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    if (!loginName.trim()) {
+      setAuthError('Nome é obrigatório.');
+      return;
+    }
+    setIsAuthLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, loginPassword);
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: loginName
+        });
+        setCustomerName(loginName);
+        localStorage.setItem('cust_name', loginName);
+        if (loginPhone.trim()) {
+          setCustomerPhone(loginPhone);
+          localStorage.setItem('cust_phone', loginPhone);
+        }
+      }
+      setShowLoginModal(false);
+      setLoginEmail('');
+      setLoginPassword('');
+      setLoginName('');
+      setLoginPhone('');
+    } catch (err: any) {
+      console.error('Customer registration error:', err);
+      if (err.code === 'auth/email-already-in-use') {
+        setAuthError('Este e-mail já está sendo utilizado.');
+      } else if (err.code === 'auth/weak-password') {
+        setAuthError('A senha deve conter pelo menos 6 caracteres.');
+      } else if (err.code === 'auth/invalid-email') {
+        setAuthError('Formato de e-mail inválido.');
+      } else {
+        setAuthError(err.message || 'Erro ao criar conta.');
+      }
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleCustomerLogout = async () => {
+    try {
+      await signOut(auth);
+      setCurrentUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   const storeStatus = useMemo(() => {
     if (!settings) return { open: false, reason: 'loading', text: 'Carregando' };
@@ -2510,6 +2603,132 @@ export default function CustomerView({ overrideStoreId }: { overrideStoreId?: st
           </span>
         </div>
       </footer>
+
+      {/* Customer Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white max-w-md w-full rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-100">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+                <UserIcon className="w-5 h-5 text-gray-500" style={{ color: settings?.primaryColor }} />
+                {isRegistering ? 'Criar Minha Conta' : 'Acessar Minha Conta'}
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowLoginModal(false);
+                  setAuthError('');
+                }} 
+                className="p-2 text-gray-400 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors shrink-0 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <form onSubmit={isRegistering ? handleCustomerRegister : handleCustomerLogin} className="space-y-4">
+                {authError && (
+                  <div className="p-3 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-100 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>{authError}</span>
+                  </div>
+                )}
+
+                {isRegistering && (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block ml-1">
+                        Seu Nome Completo
+                      </label>
+                      <input 
+                        type="text"
+                        required
+                        placeholder="Ex: Maria Santos"
+                        value={loginName}
+                        onChange={(e) => setLoginName(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl focus:ring-2 outline-none transition-all placeholder:text-gray-400 font-semibold text-sm"
+                        style={{ '--tw-ring-color': settings?.primaryColor } as React.CSSProperties}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block ml-1">
+                        WhatsApp (Opcional)
+                      </label>
+                      <input 
+                        type="tel"
+                        placeholder="Ex: (84) 98765-4321"
+                        value={loginPhone}
+                        onChange={(e) => setLoginPhone(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl focus:ring-2 outline-none transition-all placeholder:text-gray-400 font-semibold text-sm"
+                        style={{ '--tw-ring-color': settings?.primaryColor } as React.CSSProperties}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block ml-1">
+                    Seu E-mail
+                  </label>
+                  <input 
+                    type="email"
+                    required
+                    placeholder="Ex: seuemail@provedor.com"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl focus:ring-2 outline-none transition-all placeholder:text-gray-400 font-semibold text-sm"
+                    style={{ '--tw-ring-color': settings?.primaryColor } as React.CSSProperties}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block ml-1">
+                    Sua Senha
+                  </label>
+                  <input 
+                    type="password"
+                    required
+                    placeholder="No mínimo 6 caracteres"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl focus:ring-2 outline-none transition-all placeholder:text-gray-400 font-semibold text-sm"
+                    style={{ '--tw-ring-color': settings?.primaryColor } as React.CSSProperties}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isAuthLoading}
+                  className="w-full py-3 text-white rounded-xl font-bold text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2 hover:opacity-90 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: settings?.primaryColor }}
+                >
+                  {isAuthLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                  ) : (
+                    <>
+                      {isRegistering ? 'Cadastrar e Entrar' : 'Entrar'}
+                      <ChevronRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-5 pt-5 border-t border-gray-100 text-center">
+                <button
+                  onClick={() => {
+                    setIsRegistering(!isRegistering);
+                    setAuthError('');
+                  }}
+                  className="text-xs font-bold transition-all hover:underline"
+                  style={{ color: settings?.primaryColor }}
+                >
+                  {isRegistering ? 'Já possui uma conta? Faça Login' : 'Não tem uma conta? Cadastre-se grátis'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Docs Modal (Terms/Privacy) */}
       {docModal && (

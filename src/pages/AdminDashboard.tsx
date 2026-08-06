@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Settings, Package, ShoppingBag, Plus, Trash2, Camera, Edit2, CreditCard, QrCode, Share2, Copy, CheckCircle2, Clock, MapPin, Sparkles, Palette, Eye, Building, Check, Store, Printer, RotateCw, HelpCircle, X, Bell, Trash, ShieldCheck, LogOut, Lock, MessageSquare, MessageCircle, TrendingUp, Calendar, FileSpreadsheet, ChevronDown, AlertTriangle, RefreshCw, Banknote, Briefcase, UtensilsCrossed, Truck, AlertCircle, Hash, Moon, Sun, ExternalLink, Search, ChevronRight, Database, Globe, Menu, ArrowLeft, User, Tag, Users, Link as LinkIcon, CheckSquare, Crown } from 'lucide-react';
 import { getApiUrl, getAuthHeaders } from '../lib/api';
 import { Product, StoreSettings, Order, OrderStatus, DeliveryZone, DaySchedule, PaymentMethod } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import CardappLogo from '../components/CardappLogo';
 
 // Elegant Animated Toggle Component for 'Yes/No' options

@@ -99,16 +99,18 @@ export default function LandingPage() {
 
       <main className="pt-20">
         {/* Hero Section */}
-        <section className="relative px-6 pt-24 pb-32 md:pt-32 md:pb-40 overflow-hidden flex flex-col items-center text-center min-h-[90vh] justify-center">
-          {/* Background Image */}
+        <section className="relative px-6 pt-28 pb-32 md:pt-36 md:pb-44 overflow-hidden flex flex-col items-center text-center min-h-[95vh] justify-center">
+          {/* Background Image with soft dimming */}
           <div 
-            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20"
+            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.12] scale-105 pointer-events-none"
             style={{ backgroundImage: "url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop')" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-zinc-950 -z-10" />
+          {/* Subtle Golden Ambient Radial Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950/90 to-zinc-950 -z-10" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] pointer-events-none" />
           
           <div className="relative z-10 flex flex-col items-center w-full max-w-5xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 border border-amber-500/20 shadow-sm animate-fade-in-up backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-semibold uppercase tracking-[0.2em] mb-8 border border-amber-500/20 shadow-sm animate-fade-in-up backdrop-blur-md">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
@@ -116,50 +118,50 @@ export default function LandingPage() {
               Pronto para Escalar seu Negócio
             </div>
 
-            <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight text-white max-w-5xl leading-[0.9] mb-8 drop-shadow-sm">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-white max-w-5xl leading-[1.05] mb-8 drop-shadow-sm font-sans">
               Venda muito mais com o <span className="text-white">Card</span><span className="text-amber-500">app.</span>
             </h1>
             
-            <p className="text-xl sm:text-2xl text-zinc-300 max-w-3xl font-medium mb-12 leading-relaxed drop-shadow-md">
-              A plataforma definitiva para automatizar seu delivery. Segurança, velocidade e <span className="text-white font-bold">zero burocracia</span> para você focar no que importa: seu produto.
+            <p className="text-lg sm:text-xl md:text-2xl text-zinc-300 max-w-3xl font-normal mb-12 leading-relaxed drop-shadow-md">
+              A plataforma definitiva para automatizar seu delivery. Segurança, velocidade e <span className="text-white font-semibold">zero burocracia</span> para você focar no que importa: seu produto.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-lg">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
               <button 
                 onClick={handleWhatsappRequest}
-                className="w-full sm:w-auto group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-amber-500 text-zinc-950 rounded-full font-black text-lg overflow-hidden shadow-xl shadow-amber-500/20 hover:scale-105 transition-all hover:bg-amber-400 active:scale-95"
+                className="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-full font-bold text-base transition-all hover:shadow-[0_8px_30px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 <span>Abrir loja grátis</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
               <a 
                 href="https://wa.me/5584986113980?text=Olá!%20Gostaria%20de%20adquirir%20o%20Cardapp."
                 target="_blank"
                 rel="noreferrer"
-                className="w-full sm:w-auto group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/10 text-white rounded-full font-black text-lg overflow-hidden shadow-xl hover:scale-105 transition-all hover:bg-white/20 active:scale-95 backdrop-blur-md border border-white/10"
+                className="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-white/5 text-white hover:bg-white/10 rounded-full font-bold text-base transition-all hover:scale-[1.02] active:scale-[0.98] backdrop-blur-md border border-white/10"
               >
                 <span>Contato Comercial</span>
               </a>
             </div>
             
-            <p className="mt-8 text-sm font-bold text-zinc-400">Sem compromisso • Teste gratuito liberado</p>
+            <p className="mt-8 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Sem compromisso • Teste gratuito liberado</p>
           </div>
         </section>
 
         {/* Features / Trust Section */}
-        <section className="px-6 py-24 bg-zinc-900/50 border-t border-white/5">
+        <section className="px-6 py-28 bg-zinc-900/30 border-t border-white/5 relative">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-4">
+            <div className="text-center mb-20">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4">
                 Tudo o que sua loja precisa.
               </h2>
-              <p className="text-zinc-400 font-medium max-w-2xl mx-auto">
+              <p className="text-zinc-400 font-normal max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
                 Desenhado especificamente para as necessidades do comércio rápido. Performance de luxo, design minimalista e extremamente seguro.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
               {[
                 {
                   image: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=800&q=80", // Real Burger with Fries
@@ -177,37 +179,35 @@ export default function LandingPage() {
                   desc: "Sistema ultrarrápido, sem travamentos. Funciona perfeitamente em áreas com sinal de internet fraco."
                 }
               ].map((feature, idx) => (
-                <div key={idx} className="bg-zinc-950 p-8 rounded-3xl border border-white/5 shadow-sm hover:border-white/10 transition-colors flex flex-col">
+                <div key={idx} className="bg-zinc-950/60 p-6 sm:p-8 rounded-3xl border border-white/5 hover:border-white/10 transition-all flex flex-col group">
                   <div className="w-full h-48 rounded-2xl mb-6 overflow-hidden bg-zinc-900 relative">
-                    <img src={feature.image} alt={feature.title} className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                    <img src={feature.image} alt={feature.title} className="w-full h-full object-cover transition-transform group-hover:scale-[1.03] duration-500" />
                     <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none" />
                   </div>
-                  <h3 className="text-xl font-black text-white mb-3">{feature.title}</h3>
-                  <p className="text-zinc-400 leading-relaxed font-medium">{feature.desc}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-3">{feature.title}</h3>
+                  <p className="text-zinc-400 leading-relaxed text-sm font-normal">{feature.desc}</p>
                 </div>
               ))}
-            
             </div>
             
             {/* Free Trial Banner */}
-            <div className="max-w-5xl mx-auto mt-12 bg-zinc-900 border border-amber-500/30 rounded-3xl p-8 sm:px-12 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
+            <div className="max-w-5xl mx-auto bg-zinc-900/80 border border-amber-500/20 rounded-3xl p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group shadow-lg">
               <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
               <div className="relative z-10 flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-amber-500/20 shadow-sm">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase tracking-[0.25em] mb-4 border border-amber-500/20 shadow-sm">
                   Sem compromisso
                 </div>
-                <h3 className="text-2xl font-black text-white mb-2">Ainda na dúvida? Teste grátis.</h3>
-                <p className="text-zinc-400 font-medium">Você tem 7 dias de acesso total à plataforma para criar seu cardápio, divulgar e receber pedidos sem pagar nada. Não exigimos cartão de crédito.</p>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Ainda na dúvida? Teste grátis.</h3>
+                <p className="text-zinc-400 text-sm font-normal leading-relaxed">Você tem 7 dias de acesso total à plataforma para criar seu cardápio, divulgar e receber pedidos sem pagar nada. Não exigimos cartão de crédito.</p>
               </div>
-              <div className="relative z-10 w-full md:w-auto">
+              <div className="relative z-10 w-full md:w-auto flex-shrink-0">
                 <button 
                   onClick={() => handlePlanCheckout('7 Dias Grátis')}
-                  className="w-full md:w-auto px-8 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black tracking-widest uppercase transition-all flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 active:scale-95"
+                  className="w-full md:w-auto px-8 py-4 rounded-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
-                  Começar Teste <ChevronRight className="w-5 h-5" />
+                  Começar Teste Grátis
                 </button>
               </div>
-
             </div>
           </div>
         </section>

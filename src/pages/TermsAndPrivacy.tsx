@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ShieldCheck, FileText, Lock } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { FoodTrayIcon } from '../components/CardappLogo';
 
 export default function TermsAndPrivacy() {
